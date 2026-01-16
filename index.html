@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Goals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --blue:#3b82f6;
+  --soft:#0f172a;
+  --card:#111827;
+}
+*{box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{
+  margin:0;
+  background:linear-gradient(120deg,#0f172a,#1e3a8a);
+  color:#e5e7eb;
+  min-height:100vh;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+}
+h1{
+  text-align:center;
+  font-size:2.4em;
+  letter-spacing:2px;
+  color:#60a5fa;
+  text-shadow:0 0 20px rgba(96,165,250,.6);
+  animation:glow 3s infinite alternate;
+}
+@keyframes glow{
+  from{opacity:.6}
+  to{opacity:1}
+}
+.card{
+  background:rgba(17,24,39,.9);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.4);
+}
+label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:1.1em;
+}
+input[type=checkbox]{
+  width:22px;height:22px;
+  accent-color:var(--blue);
+}
+.stat{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+  font-size:.95em;
+  opacity:.9;
+}
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:6px;
+  margin-top:10px;
+}
+.day{
+  padding:10px 0;
+  text-align:center;
+  border-radius:8px;
+  background:#1f2933;
+  font-size:.85em;
+}
+.done{background:#2563eb}
+.today{outline:2px solid #60a5fa}
+.cert{
+  text-align:center;
+  padding:20px;
+  border:2px dashed #60a5fa;
+  border-radius:18px;
+  animation:fade 1s;
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.small{opacity:.7;font-size:.85em}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>GOALS</h1>
+
+<div class="card">
+  <label>
+    <input type="checkbox" id="nofap">
+    Menahan Onani Hari Ini
+  </label>
+  <div class="stat">
+    <div>🔥 Streak: <b id="streak">0</b> hari</div>
+    <div id="status" class="small"></div>
+  </div>
+</div>
+
+<div class="card">
+  <b>📅 Kalender</b>
+  <div class="calendar" id="calendar"></div>
+</div>
+
+<div class="card" id="certBox" style="display:none">
+  <div class="cert">
+    🏆 <b>SERTIFIKAT</b><br><br>
+    Kamu berhasil<br>
+    <b><span id="certDays"></span> hari</b><br>
+    Menahan Onani<br><br>
+    <span class="small">Teruskan istiqomah 💙</span>
+  </div>
+</div>
+
+</div>
+
+<script>
+const today = new Date();
+const todayKey = today.toISOString().split("T")[0];
+
+const nofap = document.getElementById("nofap");
+const streakEl = document.getElementById("streak");
+const statusEl = document.getElementById("status");
+const calendarEl = document.getElementById("calendar");
+const certBox = document.getElementById("certBox");
+const certDays = document.getElementById("certDays");
+
+let streak = Number(localStorage.getItem("streak")) || 0;
+let lastDate = localStorage.getItem("lastDate");
+let checkedToday = localStorage.getItem("done_"+todayKey)==="1";
+
+nofap.checked = checkedToday;
+streakEl.textContent = streak;
+if(checkedToday) statusEl.textContent="Hari berhasil";
+
+nofap.onchange = ()=>{
+  if(nofap.checked){
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate()-1);
+    const yKey = yesterday.toISOString().split("T")[0];
+
+    if(lastDate===yKey) streak++;
+    else streak=1;
+
+    localStorage.setItem("streak",streak);
+    localStorage.setItem("lastDate",todayKey);
+    localStorage.setItem("done_"+todayKey,"1");
+
+    statusEl.textContent="Hari berhasil";
+  }else{
+    localStorage.setItem("done_"+todayKey,"0");
+    statusEl.textContent="Belum dikunci";
+  }
+
+  streakEl.textContent = streak;
+  drawCalendar();
+  checkCert();
+};
+
+function drawCalendar(){
+  calendarEl.innerHTML="";
+  for(let i=6;i>=0;i--){
+    const d=new Date(today);
+    d.setDate(today.getDate()-i);
+    const key=d.toISOString().split("T")[0];
+
+    const div=document.createElement("div");
+    div.className="day";
+    if(localStorage.getItem("done_"+key)==="1") div.classList.add("done");
+    if(key===todayKey) div.classList.add("today");
+    div.textContent=d.getDate();
+    calendarEl.appendChild(div);
+  }
+}
+
+function checkCert(){
+  if(streak===7||streak===30||streak===90){
+    certDays.textContent=streak;
+    certBox.style.display="block";
+  }
+}
+
+drawCalendar();
+checkCert();
+</script>
+</body>
+</html>
