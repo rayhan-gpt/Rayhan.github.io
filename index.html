@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Goals</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body{
+  font-family:Poppins,sans-serif;
+  margin:0;
+  padding:20px;
+  background:linear-gradient(270deg,#60a5fa,#2563eb,#1e40af);
+  background-size:600% 600%;
+  animation:bgMove 15s ease infinite;
+  color:#fff;
+}
+
+@keyframes bgMove{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+h1{text-align:center;letter-spacing:2px}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:15px
+}
+.stat{
+  background:#fff;
+  color:#000;
+  border-radius:14px;
+  padding:12px;
+  text-align:center;
+  font-weight:600;
+  animation:fadeUp .5s ease;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+
+.nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px
+}
+
+button{
+  border:none;
+  border-radius:12px;
+  padding:8px 14px;
+  font-weight:600;
+  cursor:pointer
+}
+
+#calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px
+}
+
+.day{
+  background:#fff;
+  color:#000;
+  border-radius:12px;
+  padding:6px 0;
+  text-align:center;
+  cursor:pointer;
+  font-weight:600;
+  transition:.25s ease;
+}
+.day:hover{transform:scale(1.08)}
+.day.done{background:#22c55e;color:#fff}
+.day.today{outline:3px solid #1d4ed8}
+
+.fire{
+  font-size:14px;
+  animation:firePulse 1.2s infinite;
+}
+
+@keyframes firePulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.3)}
+  100%{transform:scale(1)}
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.box{
+  background:#fff;
+  color:#000;
+  border-radius:16px;
+  padding:20px;
+  width:90%;
+  max-width:420px;
+  animation:fadeUp .3s ease;
+}
+
+label{
+  display:flex;
+  align-items:center;
+  margin:6px 0;
+}
+input{margin-right:8px;transform:scale(1.2)}
+</style>
+</head>
+
+<body>
+
+<h1>GOALS</h1>
+
+<div class="stats">
+  <div class="stat">🔥 Streak Bulan Ini<br><b id="streak">0</b></div>
+  <div class="stat">📅 Hari Bersih<br><b id="daysOk">0</b></div>
+  <div class="stat">📊 Progress Bulan<br><b id="monthPct">0%</b></div>
+</div>
+
+<div class="nav">
+  <button onclick="changeMonth(-1)">◀</button>
+  <b id="title"></b>
+  <button onclick="changeMonth(1)">▶</button>
+</div>
+
+<div id="calendar"></div>
+
+<script>
+const acts=[
+"Sholat Tahajud","Baca Al-Waqiah","Belajar / Tugas",
+"Sholat Subuh","Olahraga Pagi","Sholat Dzuhur",
+"Sholat Ashar","Sholat Magrib","Sholat Isya",
+"Olahraga Malam","Menjaga Diri (tidak onani)"
+];
+
+const streakEl=document.getElementById("streak");
+const daysOkEl=document.getElementById("daysOk");
+const monthPctEl=document.getElementById("monthPct");
+
+let now=new Date();
+
+function k(y,m,d){return `${y}-${m}-${d}`}
+function days(y,m){return new Date(y,m+1,0).getDate()}
+
+function render(){
+calendar.innerHTML='';
+title.textContent=now.toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+
+let doneMonth=0;
+
+for(let d=1;d<=days(now.getFullYear(),now.getMonth());d++){
+  let box=document.createElement('div');
+  box.className='day';
+
+  let num=document.createElement('div');
+  num.textContent=d;
+  box.appendChild(num);
+
+  let data=JSON.parse(localStorage.getItem(
+    k(now.getFullYear(),now.getMonth(),d)
+  )||'{}');
+
+  if(data["Menjaga Diri (tidak onani)"]){
+    box.classList.add('done');
+    doneMonth++;
+
+    let fire=document.createElement("div");
+    fire.className="fire";
+    fire.textContent="🔥";
+    box.appendChild(fire);
+  }
+
+  if(d===new Date().getDate() &&
+     now.getMonth()===new Date().getMonth()){
+    box.classList.add('today');
+  }
+
+  box.onclick=()=>openDay(d);
+  calendar.appendChild(box);
+}
+
+streakEl.textContent=doneMonth;
+daysOkEl.textContent=doneMonth;
+monthPctEl.textContent=
+ Math.round(doneMonth/days(now.getFullYear(),now.getMonth())*100)+"%";
+}
+
+function openDay(d){
+let modal=document.createElement('div');
+modal.className='modal';
+
+let box=document.createElement('div');
+box.className='box';
+box.innerHTML=`<h3>Tanggal ${d}</h3>`;
+
+let keyDay=k(now.getFullYear(),now.getMonth(),d);
+let data=JSON.parse(localStorage.getItem(keyDay)||'{}');
+
+acts.forEach(a=>{
+ let cb=document.createElement('input');
+ cb.type='checkbox';
+ cb.checked=!!data[a];
+ cb.onchange=()=>{
+  data[a]=cb.checked;
+  localStorage.setItem(keyDay,JSON.stringify(data));
+  render();
+ };
+ let lb=document.createElement('label');
+ lb.append(cb,document.createTextNode(a));
+ box.appendChild(lb);
+});
+
+let close=document.createElement('button');
+close.textContent='Tutup';
+close.onclick=()=>modal.remove();
+
+box.appendChild(close);
+modal.appendChild(box);
+document.body.appendChild(modal);
+}
+
+function changeMonth(n){
+ now.setMonth(now.getMonth()+n);
+ render();
+}
+
+render();
+</script>
+</body>
+</html>
